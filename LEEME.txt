@@ -1,0 +1,86 @@
+# Proyecto de Scraper Financiero de la SEC
+
+Este proyecto implementa un scraper completo para descargar, filtrar y procesar informes financieros (10-K y 10-Q) de empresas registradas en la **U.S. Securities and Exchange Commission (SEC)**, con foco en la extracción de etiquetas XBRL específicas.
+
+---
+
+## Estructura del proyecto
+
+```
+sec_scraper_project/
+├── dataset/
+│   ├── company_list.csv               # Lista completa de empresas con su CIK, ticker y nombre
+│   ├── 10k_filings.csv                # Dataset con los informes 10-K extraídos
+│   ├── 10q_filings.csv                # Dataset con los informes 10-Q extraídos
+│   ├── tickers/
+│   │   └── tickers.txt                # Tickers objetivo para el scraping
+│   ├── index_json/                    # Archivos index.json descargados de la SEC
+│   ├── xbrl_tags.csv                  # Lista de etiquetas XBRL y su tipo de dato
+│   └── xbrl_data_YYYY_type.csv        # Resultado del scraping final (por año y tipo de informe)
+├── source/
+│   ├── main.py                        # Módulo orquestador (opcional)
+│   ├── download_company_list.py       # Descarga company_tickers.json
+│   ├── get_company_list.py            # Procesa la lista de empresas y genera company_list.csv
+│   ├── download_index_json.py         # Descarga los index.json para cada CIK
+│   ├── extract_10k_filings.py         # Extrae los 10-K desde los index.json
+│   ├── extract_10q_filings.py         # Extrae los 10-Q desde los index.json
+│   └── download_xbrl_data.py          # Filtra, descarga y procesa los archivos XBRL
+└── requirements.txt
+```
+
+---
+
+## Flujo de trabajo del scraper
+
+1. **Descarga de metadatos**:
+   - Se descarga el archivo `company_tickers.json` desde la SEC.
+   - Se convierte en `company_list.csv`, con columnas `cik`, `ticker`, `title`.
+
+2. **Obtención de index.json por empresa**:
+   - Se seleccionan empresas por ticker (`tickers.txt`) o todas.
+   - Se descarga su `index.json`, que contiene todos los filings.
+
+3. **Extracción de informes 10-K / 10-Q**:
+   - Se generan dos datasets: `10k_filings.csv` y `10q_filings.csv`.
+
+4. **Creación del archivo de etiquetas XBRL**:
+   - `xbrl_tags.csv` contiene la lista de conceptos a extraer (tag_name, data_type).
+
+5. **Descarga de archivos XBRL y extracción de datos**:
+   - Se ejecuta `download_xbrl_data.py` con parámetros:
+     - `report_type`: `1 = 10-K`, `2 = 10-Q`, `0 = ambos`
+     - `year`: Año deseado o `0` para todos
+     - `quarter`: Trimestre (`1-4`) o `0` para todos
+   - El módulo descarga los archivos `.xml`, extrae solo las tags definidas y guarda los resultados en un archivo CSV.
+
+---
+
+## Resultado
+
+El archivo final (`xbrl_data_YYYY_tipo.csv`) contiene:
+
+- Una **fila por informe** (empresa + año + trimestre)
+- Una **columna por cada tag XBRL solicitada**
+- Ejemplo:
+
+```
+cik,ticker,year,quarter,Revenues,NetIncomeLoss,EarningsPerShareBasic,...
+0000320193,AAPL,2023,0,394328000,97449000,6.05,...
+```
+
+---
+
+## Personalización
+
+- Puedes modificar los tickers en `dataset/tickers/tickers.txt`.
+- Puedes añadir o quitar tags en `dataset/xbrl_tags.csv`.
+- Se puede extender fácilmente para otros tipos de informes (8-K, S-1, etc).
+
+---
+
+## Contacto del desarrollador
+
+Alberto Paramio Galisteo  
+Email: aparamio@uoc.edu
+
+Este scraper está diseñado para fines **académicos** siguiendo las políticas de acceso responsable de la SEC.
